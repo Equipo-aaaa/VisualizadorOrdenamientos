@@ -1,0 +1,6 @@
+# Filtro de seguridad: ignora el archivo con contraseñas reales
+.env
+
+# Archivos de basura temporales que genera Python automáticamente
+__pycache__/
+*.pyc
