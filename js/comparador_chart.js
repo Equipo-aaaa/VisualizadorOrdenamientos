@@ -16,7 +16,7 @@ export function logicaCrearListas(inicio, incremento, fin) {
     for (let i = inicio; i <= fin; i += incremento) {
         const arregloNum = [];
         for (let j = 0; j < i; j++) {
-            const numeroRandom = Math.floor(Math.random() * 10001); // 0 a 10000 como en tu main.py
+            const numeroRandom = Math.floor(Math.random() * 10001); // 0 a 10000 como en  main.py
             arregloNum.push(numeroRandom);
         }
         listaDeListas.push(arregloNum);
