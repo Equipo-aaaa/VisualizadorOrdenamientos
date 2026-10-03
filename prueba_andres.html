@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Prueba de Métricas y Benchmark</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-dark text-light p-4">
+
+  <div class="container">
+    <h2 class="mb-4 text-info">Módulo de Visualización, Métricas y Benchmark </h2>
+
+    <!-- SECCIÓN 1: PANEL DE MÉTRICAS (TAREAS #16 y #20) -->
+    <div class="card bg-secondary text-white mb-4 p-3">
+      <h5>1. Prueba del Panel de Métricas y Eventos (Gnome, Stooge y Exchange Sort)</h5>
+      <div class="d-flex gap-2 my-2">
+        <button id="btn-gnome" class="btn btn-warning">Probar Gnome Sort</button>
+        <button id="btn-exchange" class="btn btn-info">Probar Exchange Sort</button>
+        <button id="btn-stooge" class="btn btn-light">Probar Stooge Sort</button>
+      </div>
+      <div class="row text-center mt-3">
+        <div class="col bg-dark p-3 mx-1 rounded">
+          <small class="text-secondary">COMPARACIONES</small>
+          <h3 id="metrica-comparaciones" class="text-warning">0</h3>
+        </div>
+        <div class="col bg-dark p-3 mx-1 rounded">
+          <small class="text-secondary">INTERCAMBIOS</small>
+          <h3 id="metrica-intercambios" class="text-danger">0</h3>
+        </div>
+        <div class="col bg-dark p-3 mx-1 rounded">
+          <small class="text-secondary">ACCESOS</small>
+          <h3 id="metrica-accesos" class="text-info">0</h3>
+        </div>
+        <div class="col bg-dark p-3 mx-1 rounded">
+          <small class="text-secondary">TIEMPO (SIN ANIMACIÓN)</small>
+          <h3 id="metrica-tiempo" class="text-success">0.0000 ms</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: COMPARADOR CON CHART.JS (TAREAS #9, #19 y #20) -->
+    <div class="card bg-secondary text-white p-3">
+      <h5>2. Comparador de Algoritmos </h5>
+      <div class="row g-3 align-items-end my-2">
+        <div class="col-md-2">
+          <label class="form-label">Inicio (N)</label>
+          <input type="number" id="input-ini" class="form-control" value="20">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Incremento</label>
+          <input type="number" id="input-inc" class="form-control" value="20">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Fin (N)</label>
+          <input type="number" id="input-fin" class="form-control" value="100">
+        </div>
+        <div class="col-md-4">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input chk-algo" type="checkbox" value="gnome" checked>
+            <label class="form-check-label">Gnome</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input chk-algo" type="checkbox" value="exchange" checked>
+            <label class="form-check-label">Exchange</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input chk-algo" type="checkbox" value="stooge">
+            <label class="form-check-label">Stooge</label>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <button id="btn-benchmark" class="btn btn-success w-100">Ejecutar Benchmark</button>
+        </div>
+      </div>
+
+      <!-- Lienzo de la gráfica Chart.js -->
+      <div class="bg-dark p-3 rounded mt-3" style="position: relative; height: 380px; width: 100%;">
+        <canvas id="graficaBenchmark"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { gnomeSort, stoogeSort, exchangeSort } from './js/algoritmos_andres.js';
+    import { contarEventosPorTipo, medirTiempoSinAnimacion } from './js/metricas.js';
+    import { logicaCrearListas, logicaAnalisisYBenchmark } from './js/comparador_chart.js';
+
+    const catalogo = {
+      gnome:    { nombre: 'Gnome Sort',    fn: gnomeSort,    color: '#4bc0c0' },
+      exchange: { nombre: 'Exchange Sort', fn: exchangeSort, color: '#ff9f40' },
+      stooge:   { nombre: 'Stooge Sort',   fn: stoogeSort,   color: '#ff6384' }
+    };
+
+    function probarAlgoritmoIndividual(fnAlgoritmo) {
+      const arrPrueba = Array.from({ length: 50 }, () => Math.floor(Math.random() * 500));
+      const { eventos } = medirTiempoSinAnimacion(fnAlgoritmo, arrPrueba);
+      contarEventosPorTipo(eventos);
+    }
+
+    document.getElementById('btn-gnome').addEventListener('click', () => probarAlgoritmoIndividual(gnomeSort));
+    document.getElementById('btn-exchange').addEventListener('click', () => probarAlgoritmoIndividual(exchangeSort));
+    document.getElementById('btn-stooge').addEventListener('click', () => probarAlgoritmoIndividual(stoogeSort));
+
+    document.getElementById('btn-benchmark').addEventListener('click', () => {
+      const ini = parseInt(document.getElementById('input-ini').value, 10);
+      const inc = parseInt(document.getElementById('input-inc').value, 10);
+      const fin = parseInt(document.getElementById('input-fin').value, 10);
+
+      const seleccionados = Array.from(document.querySelectorAll('.chk-algo:checked')).map(el => el.value);
+
+      logicaCrearListas(ini, inc, fin);
+      logicaAnalisisYBenchmark(catalogo, seleccionados);
+    });
+  </script>
+</body>
+</html>
