@@ -4,6 +4,7 @@ import { tamanosDeMuestra, validarRango, ejecutarBenchmark } from './benchmark.j
 
 /**
  * PÁGINA 2 — Comparador de Algoritmos
+ * (Basado en el prototipo de Andrés: comparador_chart.js con Chart.js)
  *
  * Flujo:
  *   1. Leer inicio / paso / fin y calcular los tamaños (20, 40, 60, 80, 100).

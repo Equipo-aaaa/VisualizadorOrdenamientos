@@ -10,12 +10,12 @@ export function gnomeSort(lista, eventos = null) {
             i += 1;
         } else {
             if (eventos) eventos.push(compare(i - 1, i));
-            
+
             if (arr[i] >= arr[i - 1]) {
                 i += 1;
             } else {
                 if (eventos) eventos.push(swap(i - 1, i));
-                
+
                 [arr[i], arr[i - 1]] = [arr[i - 1], arr[i]];
                 i -= 1;
             }
@@ -27,5 +27,5 @@ export function gnomeSort(lista, eventos = null) {
         if (eventos) eventos.push(done(k));
     }
 
-    return arr; 
+    return arr;
 }

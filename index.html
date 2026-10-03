@@ -92,7 +92,7 @@
               </button>
             </section>
 
-            <!-- Lista de algoritmos (se llena desde JS con el catálogo) -->
+            <!-- Lista de los 8 algoritmos (se llena desde JS con js/algoritmos/catalogo.js) -->
             <section class="panel">
               <h2 class="titulo-panel">2. Algoritmo</h2>
               <div id="listaAlgoritmos"></div>
@@ -132,12 +132,15 @@
           </div>
         </div>
 
-        <!-- Métricas -->
+        <!-- Métricas: las 4 primeras avanzan con la animación;
+             "Tiempo real" es el algoritmo sin animación sobre el mismo arreglo -->
         <div class="d-flex flex-wrap gap-2 mb-3">
           <div class="metrica"><div class="nombre">Comparaciones</div><div id="mComparaciones" class="valor texto-acento">0</div></div>
           <div class="metrica"><div class="nombre">Intercambios</div><div id="mIntercambios" class="valor texto-comparacion">0</div></div>
           <div class="metrica"><div class="nombre">Escrituras</div><div id="mEscrituras" class="valor texto-escritura">0</div></div>
+          <div class="metrica"><div class="nombre">Accesos</div><div id="mAccesos" class="valor" style="color:var(--acento-secundario)">0</div></div>
           <div class="metrica"><div class="nombre">Progreso</div><div id="mProgreso" class="valor texto-ordenado">0 / 0</div></div>
+          <div class="metrica" title="Tiempo del algoritmo sin animación, con este mismo arreglo"><div class="nombre">Tiempo real</div><div id="mTiempo" class="valor">—</div></div>
         </div>
 
         <!-- Leyenda -->

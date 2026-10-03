@@ -72,6 +72,10 @@ export async function ejecutarBenchmark(algoritmos, arreglos, alProgreso = () =>
 
   for (const alg of algoritmos) {
     resultados[alg.id] = [];
+    // Calentamiento: la primera vez que corre una función, el navegador
+    // todavía no la ha optimizado y sale más lenta. Sin esto, el primer
+    // punto (N más chico) salía MÁS alto que el segundo. Se descarta.
+    medir(alg.fn, arreglos[0], 2);
     for (const arreglo of arreglos) {
       const limite = alg.maxNComparador ?? Infinity;
       resultados[alg.id].push(arreglo.length <= limite ? medir(alg.fn, arreglo) : null);

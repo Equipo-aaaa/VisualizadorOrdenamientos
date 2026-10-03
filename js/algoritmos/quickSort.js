@@ -15,12 +15,12 @@ function partition(arr, low, high, eventos) {
             }
         }
     }
-    
+
     if (i + 1 !== high) {
         if (eventos) eventos.push(swap(i + 1, high));
         [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
     }
-    
+
     return i + 1;
 }
 
