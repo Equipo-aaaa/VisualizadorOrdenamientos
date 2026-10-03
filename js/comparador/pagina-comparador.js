@@ -4,13 +4,14 @@ import { tamanosDeMuestra, validarRango, ejecutarBenchmark } from './benchmark.j
 
 /**
  * PÁGINA 2 — Comparador de Algoritmos
- * (Basado en el prototipo de Andrés: comparador_chart.js con Chart.js)
  *
  * Flujo:
  *   1. Leer inicio / paso / fin y calcular los tamaños (20, 40, 60, 80, 100).
  *   2. Generar UN arreglo aleatorio por tamaño.
- *   3. Medir cada algoritmo disponible con esos mismos arreglos.
- *   4. Dibujar una línea por algoritmo con Chart.js (variable global `Chart`).
+ *   3. Medir cada algoritmo disponible con esos mismos arreglos: tiempo,
+ *      comparaciones, intercambios y escrituras.
+ *   4. Dibujar una línea por algoritmo con Chart.js (variable global `Chart`)
+ *      para la métrica elegida en los botones de arriba.
  *   5. Las casillas ocultan/muestran líneas; Chart.js reescala el eje Y solo.
  */
 
@@ -22,6 +23,60 @@ const disponibles = ALGORITMOS.filter((a) => a.fn !== null);
 const visibles = new Set(disponibles.filter((a) => !a.ocultoPorDefecto).map((a) => a.id));
 
 let grafica = null;     // instancia de Chart (se crea con el primer resultado)
+
+// Último resultado medido. Al cambiar de métrica NO se vuelve a medir:
+// solo se redibuja con otra parte de estos datos.
+let ultimosTamanos = null;
+let ultimosResultados = null;
+
+// ---------------------------------------------------------------- Métricas
+
+/**
+ * Cómo se muestra cada métrica. Las claves coinciden con las de
+ * ejecutarBenchmark (benchmark.js).
+ */
+const INFO_METRICAS = {
+  tiempo: {
+    titulo: 'Tiempo de ejecución vs. tamaño (N)',
+    subtitulo: 'Cada punto es el tiempo promedio de varias ejecuciones sobre el mismo arreglo.',
+    eje: 'Tiempo (ms)',
+    tabla: 'Resultados (tiempo)',
+    formato: formatoMs,
+  },
+  comparaciones: {
+    titulo: 'Comparaciones vs. tamaño (N)',
+    subtitulo: 'Conteo exacto: no depende de la computadora y se puede comparar con el análisis teórico.',
+    eje: 'Comparaciones',
+    tabla: 'Resultados (comparaciones)',
+    formato: formatoConteo,
+  },
+  intercambios: {
+    titulo: 'Intercambios vs. tamaño (N)',
+    subtitulo: 'Número de swaps. Insertion y Shell no intercambian: desplazan (ver Escrituras).',
+    eje: 'Intercambios',
+    tabla: 'Resultados (intercambios)',
+    formato: formatoConteo,
+  },
+  escrituras: {
+    titulo: 'Escrituras vs. tamaño (N)',
+    subtitulo: 'Valores escritos sin intercambiar (desplazamientos de Insertion, mezcla de Merge…).',
+    eje: 'Escrituras',
+    tabla: 'Resultados (escrituras)',
+    formato: formatoConteo,
+  },
+};
+
+function metricaActual() {
+  return document.querySelector('input[name="metrica"]:checked').value;
+}
+
+/** Cambia títulos de la página según la métrica elegida. */
+function ponerTextosMetrica() {
+  const info = INFO_METRICAS[metricaActual()];
+  $('tituloMetrica').textContent = info.titulo;
+  $('subtituloMetrica').textContent = info.subtitulo;
+  $('tituloTabla').textContent = info.tabla;
+}
 
 // ---------------------------------------------------------------- Generador
 
@@ -86,11 +141,18 @@ function aplicarVisibilidad() {
 
 // ---------------------------------------------------------------- Gráfica
 
-function dibujarGrafica(tamanos, resultados) {
+/**
+ * @param {number[]} tamanos
+ * @param {object} datos  { idAlgoritmo: [valor por tamaño] } de UNA métrica
+ * @param {string} metrica  clave de INFO_METRICAS
+ */
+function dibujarGrafica(tamanos, datos, metrica) {
+  const info = INFO_METRICAS[metrica];
+
   const datasets = disponibles.map((alg) => ({
     idAlgoritmo: alg.id,                 // campo propio, para encontrarlo después
     label: alg.nombre,
-    data: resultados[alg.id],
+    data: datos[alg.id],
     borderColor: alg.color,
     backgroundColor: alg.color,
     hidden: !visibles.has(alg.id),
@@ -103,6 +165,7 @@ function dibujarGrafica(tamanos, resultados) {
   if (grafica) {
     grafica.data.labels = tamanos;
     grafica.data.datasets = datasets;
+    grafica.options.scales.y.title.text = info.eje;
     grafica.update();
     return;
   }
@@ -119,7 +182,8 @@ function dibujarGrafica(tamanos, resultados) {
         tooltip: {
           callbacks: {
             title: (items) => `N = ${items[0].label}`,
-            label: (item) => ` ${item.dataset.label}: ${formatoMs(item.parsed.y)}`,
+            // Se lee la métrica al momento, así el tooltip siempre usa el formato correcto
+            label: (item) => ` ${item.dataset.label}: ${INFO_METRICAS[metricaActual()].formato(item.parsed.y)}`,
           },
         },
       },
@@ -129,7 +193,7 @@ function dibujarGrafica(tamanos, resultados) {
         },
         y: {
           type: $('escalaLog').checked ? 'logarithmic' : 'linear',
-          title: { display: true, text: 'Tiempo (ms)' },
+          title: { display: true, text: info.eje },
           beginAtZero: true,
         },
       },
@@ -165,17 +229,34 @@ function formatoMs(ms) {
   return ms < 0.01 ? `${(ms * 1000).toFixed(2)} µs` : `${ms.toFixed(3)} ms`;
 }
 
+function formatoConteo(n) {
+  if (n === null || n === undefined) return '—';
+  return n.toLocaleString('es-MX');       // 12345 → "12,345"
+}
+
 // ---------------------------------------------------------------- Tabla
 
-function dibujarTabla(tamanos, resultados) {
+function dibujarTabla(tamanos, datos, metrica) {
+  const formato = INFO_METRICAS[metrica].formato;
+
   $('tablaCabecera').innerHTML =
-    `<tr><th>Algoritmo</th>${tamanos.map((n) => `<th class="text-end">N=${n}</th>`).join('')}</tr>`;
+    `<tr><th>Algoritmo</th><th>Complejidad</th>${tamanos.map((n) => `<th class="text-end">N=${n}</th>`).join('')}</tr>`;
 
   $('tablaCuerpo').innerHTML = disponibles.map((alg) => `
     <tr>
       <td><span class="muestra-color d-inline-block me-2" style="background:${alg.color};width:10px;height:10px;border-radius:2px"></span>${alg.nombre}</td>
-      ${resultados[alg.id].map((ms) => `<td class="text-end">${formatoMs(ms)}</td>`).join('')}
+      <td class="text-secondary">${alg.tiempo}</td>
+      ${datos[alg.id].map((v) => `<td class="text-end">${formato(v)}</td>`).join('')}
     </tr>`).join('');
+}
+
+/** Redibuja gráfica y tabla con la métrica elegida (sin volver a medir). */
+function mostrarMetrica() {
+  ponerTextosMetrica();
+  if (!ultimosResultados) return;
+  const metrica = metricaActual();
+  dibujarGrafica(ultimosTamanos, ultimosResultados[metrica], metrica);
+  dibujarTabla(ultimosTamanos, ultimosResultados[metrica], metrica);
 }
 
 // ---------------------------------------------------------------- Ejecutar
@@ -195,13 +276,13 @@ async function ejecutar() {
 
   const arreglos = tamanos.map((n) => arregloAleatorio(n, 1000));
 
-  const resultados = await ejecutarBenchmark(disponibles, arreglos, (hechos, total) => {
+  ultimosResultados = await ejecutarBenchmark(disponibles, arreglos, (hechos, total) => {
     $('barraProgreso').style.width = `${(hechos / total) * 100}%`;
   });
+  ultimosTamanos = tamanos;
 
   $('sinDatos').classList.add('d-none');
-  dibujarGrafica(tamanos, resultados);
-  dibujarTabla(tamanos, resultados);
+  mostrarMetrica();
 
   $('btnEjecutar').disabled = false;
   $('contenedorProgreso').classList.add('d-none');
@@ -213,6 +294,10 @@ async function ejecutar() {
 for (const id of ['inicio', 'paso', 'fin']) $(id).addEventListener('input', vistaPrevia);
 $('btnEjecutar').addEventListener('click', ejecutar);
 
+for (const radio of document.querySelectorAll('input[name="metrica"]')) {
+  radio.addEventListener('change', mostrarMetrica);
+}
+
 $('escalaLog').addEventListener('change', (e) => {
   if (!grafica) return;
   grafica.options.scales.y.type = e.target.checked ? 'logarithmic' : 'linear';
@@ -222,4 +307,5 @@ $('escalaLog').addEventListener('change', (e) => {
 // ---------------------------------------------------------------- Inicio
 
 dibujarListaLineas();
+ponerTextosMetrica();
 vistaPrevia();

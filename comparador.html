@@ -101,7 +101,7 @@
               </div>
             </section>
 
-            <!-- Líneas de los 8 algoritmos (se llena desde JS con js/algoritmos/catalogo.js) -->
+            <!-- Líneas de algoritmos (se llena desde JS) -->
             <section class="panel">
               <h2 class="titulo-panel d-flex justify-content-between">
                 <span>2. Líneas</span>
@@ -117,10 +117,23 @@
       <!-- ===== Contenido ===== -->
       <main class="col-md-9 contenido">
 
-        <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
-          <div>
-            <h1 class="titulo-pagina">Tiempo de ejecución vs. tamaño (N)</h1>
-            <p class="subtitulo-pagina">Cada punto es el tiempo promedio de varias ejecuciones sobre el mismo arreglo.</p>
+        <!-- Títulos: pagina-comparador.js los cambia según la métrica -->
+        <div class="mb-3">
+          <h1 id="tituloMetrica" class="titulo-pagina">Tiempo de ejecución vs. tamaño (N)</h1>
+          <p id="subtituloMetrica" class="subtitulo-pagina">Cada punto es el tiempo promedio de varias ejecuciones sobre el mismo arreglo.</p>
+        </div>
+
+        <!-- Métrica a graficar. Cambiarla NO vuelve a medir: usa los últimos datos. -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div class="btn-group" role="group" aria-label="Métrica">
+            <input type="radio" class="btn-check" name="metrica" id="metTiempo" value="tiempo" checked>
+            <label class="btn btn-neutro btn-sm" for="metTiempo"><i class="bi bi-stopwatch me-1"></i>Tiempo</label>
+            <input type="radio" class="btn-check" name="metrica" id="metComparaciones" value="comparaciones">
+            <label class="btn btn-neutro btn-sm" for="metComparaciones"><i class="bi bi-arrow-left-right me-1"></i>Comparaciones</label>
+            <input type="radio" class="btn-check" name="metrica" id="metIntercambios" value="intercambios">
+            <label class="btn btn-neutro btn-sm" for="metIntercambios"><i class="bi bi-shuffle me-1"></i>Intercambios</label>
+            <input type="radio" class="btn-check" name="metrica" id="metEscrituras" value="escrituras">
+            <label class="btn btn-neutro btn-sm" for="metEscrituras"><i class="bi bi-pencil me-1"></i>Escrituras</label>
           </div>
           <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" role="switch" id="escalaLog">
@@ -139,7 +152,7 @@
 
         <!-- Tabla con los números exactos -->
         <div class="panel">
-          <h2 class="titulo-panel">Resultados (ms)</h2>
+          <h2 id="tituloTabla" class="titulo-panel">Resultados (tiempo)</h2>
           <div class="table-responsive">
             <table class="table table-sm tabla-resultados mb-0">
               <thead id="tablaCabecera"></thead>

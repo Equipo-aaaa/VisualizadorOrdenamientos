@@ -1,8 +1,15 @@
+import { TIPOS } from '../core/eventos.js';
+
 /**
- * BENCHMARK — mide cuánto tarda cada algoritmo con arreglos de distinto tamaño.
+ * BENCHMARK — mide cada algoritmo con arreglos de distinto tamaño.
  *
  * No toca el HTML: recibe datos y devuelve números. Así se puede probar sin
  * navegador y Andrés puede cambiar la gráfica sin tocar la medición.
+ *
+ * Mide dos tipos de cosas:
+ *   - Tiempo (ms): depende de la computadora y del navegador.
+ *   - Conteos (comparaciones, intercambios, escrituras): exactos, siempre
+ *     dan lo mismo para el mismo arreglo y coinciden con el análisis teórico.
  */
 
 /**
@@ -51,8 +58,34 @@ export function medir(fn, arreglo, tiempoMinimo = 5) {
   return transcurrido / repeticiones;
 }
 
+/**
+ * Cuenta las operaciones que hace `fn` al ordenar `arreglo`.
+ *
+ * Truco: los algoritmos solo llaman `eventos.push(...)`, así que en lugar de
+ * un arreglo real se les pasa un objeto con su propio `push` que suma en vez
+ * de guardar. Así Stooge con N = 500 (millones de eventos) no llena la memoria.
+ *
+ * Los `done` no se cuentan: no son operaciones del algoritmo, solo sirven
+ * para pintar de verde en la animación.
+ */
+export function contar(fn, arreglo) {
+  const conteo = { comparaciones: 0, intercambios: 0, escrituras: 0 };
+  const contador = {
+    push(evento) {
+      if (evento.type === TIPOS.COMPARE) conteo.comparaciones++;
+      else if (evento.type === TIPOS.SWAP) conteo.intercambios++;
+      else if (evento.type === TIPOS.OVERWRITE) conteo.escrituras++;
+    },
+  };
+  fn(arreglo, contador);
+  return conteo;
+}
+
 /** Cede el control al navegador un instante para que repinte la página. */
 const respirar = () => new Promise((resolver) => setTimeout(resolver, 0));
+
+/** Nombres de las métricas que devuelve ejecutarBenchmark. */
+export const METRICAS = ['tiempo', 'comparaciones', 'intercambios', 'escrituras'];
 
 /**
  * Ejecuta la comparación completa.
@@ -61,24 +94,41 @@ const respirar = () => new Promise((resolver) => setTimeout(resolver, 0));
  * @param {number[][]} arreglos  Un arreglo aleatorio por tamaño. TODOS los
  *                               algoritmos ordenan los mismos arreglos.
  * @param {function} alProgreso  (hechos, total) para actualizar la barra.
- * @returns {Promise<object>}    { idAlgoritmo: [ms por tamaño, ...] }
- *                               Un null significa "no se midió" (N demasiado
- *                               grande para ese algoritmo, p. ej. Stooge).
+ * @returns {Promise<object>}    Un objeto por métrica:
+ *   {
+ *     tiempo:        { idAlgoritmo: [ms por tamaño, ...] },
+ *     comparaciones: { idAlgoritmo: [conteo por tamaño, ...] },
+ *     intercambios:  { ... },
+ *     escrituras:    { ... },
+ *   }
+ *   Un null significa "no se midió" (N demasiado grande para ese algoritmo,
+ *   p. ej. Stooge).
  */
 export async function ejecutarBenchmark(algoritmos, arreglos, alProgreso = () => {}) {
-  const resultados = {};
+  const resultados = Object.fromEntries(METRICAS.map((m) => [m, {}]));
   const total = algoritmos.length * arreglos.length;
   let hechos = 0;
 
   for (const alg of algoritmos) {
-    resultados[alg.id] = [];
-    // Calentamiento: la primera vez que corre una función, el navegador
-    // todavía no la ha optimizado y sale más lenta. Sin esto, el primer
-    // punto (N más chico) salía MÁS alto que el segundo. Se descarta.
-    medir(alg.fn, arreglos[0], 2);
+    for (const m of METRICAS) resultados[m][alg.id] = [];
+    const limite = alg.maxNComparador ?? Infinity;
+
+    // Calentamiento: el navegador optimiza la función después de usarla
+    // varias veces. Sin esto, el primer punto (N más chico) salía MÁS alto
+    // que el segundo. Se descarta. (Si el arreglo más chico ya rebasa el
+    // límite del algoritmo, p. ej. Stooge con N > 500, no se calienta.)
+    if (arreglos[0].length <= limite) medir(alg.fn, arreglos[0], 2);
+
     for (const arreglo of arreglos) {
-      const limite = alg.maxNComparador ?? Infinity;
-      resultados[alg.id].push(arreglo.length <= limite ? medir(alg.fn, arreglo) : null);
+      if (arreglo.length <= limite) {
+        const conteo = contar(alg.fn, arreglo);
+        resultados.tiempo[alg.id].push(medir(alg.fn, arreglo));
+        resultados.comparaciones[alg.id].push(conteo.comparaciones);
+        resultados.intercambios[alg.id].push(conteo.intercambios);
+        resultados.escrituras[alg.id].push(conteo.escrituras);
+      } else {
+        for (const m of METRICAS) resultados[m][alg.id].push(null);
+      }
       alProgreso(++hechos, total);
       await respirar();     // sin esto la página se congela hasta terminar
     }
