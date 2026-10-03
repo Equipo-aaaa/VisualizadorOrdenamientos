@@ -1,4 +1,9 @@
 import { insertionSort } from './insertionSort.js';
+import { bubbleSort } from './bubbleSort.js';
+import { selectionSort } from './selectionSort.js';
+import { mergeSort } from './mergeSort.js';
+import { quickSort } from './quickSort.js';
+
 // Cuando cada integrante termine su algoritmo, se importa aquí y se pone en `fn`:
 // import { bubbleSort } from './bubbleSort.js';
 
@@ -25,11 +30,11 @@ import { insertionSort } from './insertionSort.js';
  *   fn          La función (lista, eventos = null) => arreglo ordenado.
  */
 export const ALGORITMOS = [
-  { id: 'bubble',    nombre: 'Bubble Sort',    descripcion: 'Intercambio adyacente', tiempo: 'O(n²)',      espacio: 'O(1)',      color: '#60A5FA', maxN: 100, fn: null },
-  { id: 'selection', nombre: 'Selection Sort', descripcion: 'Mínimos sucesivos',     tiempo: 'O(n²)',      espacio: 'O(1)',      color: '#F97316', maxN: 100, fn: null },
+  { id: 'bubble',    nombre: 'Bubble Sort',    descripcion: 'Intercambio adyacente', tiempo: 'O(n²)',      espacio: 'O(1)',      color: '#60A5FA', maxN: 100, fn: bubbleSort },
+  { id: 'selection', nombre: 'Selection Sort', descripcion: 'Mínimos sucesivos',     tiempo: 'O(n²)',      espacio: 'O(1)',      color: '#F97316', maxN: 100, fn: selectionSort },
   { id: 'insertion', nombre: 'Insertion Sort', descripcion: 'Inserción ordenada',    tiempo: 'O(n²)',      espacio: 'O(1)',      color: '#10B981', maxN: 100, fn: insertionSort },
-  { id: 'merge',     nombre: 'Merge Sort',     descripcion: 'Divide y vencerás',     tiempo: 'O(n log n)', espacio: 'O(n)',      color: '#06B6D4', maxN: 100, fn: null },
-  { id: 'quick',     nombre: 'Quick Sort',     descripcion: 'Partición con pivote',  tiempo: 'O(n log n)', espacio: 'O(log n)',  color: '#6366F1', maxN: 100, fn: null },
+  { id: 'merge',     nombre: 'Merge Sort',     descripcion: 'Divide y vencerás',     tiempo: 'O(n log n)', espacio: 'O(n)',      color: '#06B6D4', maxN: 100, fn: mergeSort },
+  { id: 'quick',     nombre: 'Quick Sort',     descripcion: 'Partición con pivote',  tiempo: 'O(n log n)', espacio: 'O(log n)',  color: '#6366F1', maxN: 100, fn: quickSort },
   { id: 'heap',      nombre: 'Heap Sort',      descripcion: 'Montículo binario',     tiempo: 'O(n log n)', espacio: 'O(1)',      color: '#EC4899', maxN: 100, fn: null },
   { id: 'shell',     nombre: 'Shell Sort',     descripcion: 'Brechas decrecientes',  tiempo: 'O(n^1.5)',   espacio: 'O(1)',      color: '#EAB308', maxN: 100, fn: null },
   { id: 'stooge',    nombre: 'Stooge Sort',    descripcion: 'Recursivo 2/3 traslape', tiempo: 'O(n^2.7)',  espacio: 'O(n)',      color: '#F43F5E', maxN: 30,  maxNComparador: 500, ocultoPorDefecto: true, fn: null },
