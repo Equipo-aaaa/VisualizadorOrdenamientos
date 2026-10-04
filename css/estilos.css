@@ -92,8 +92,20 @@ body {
 }
 
 .encabezado small {
+  font-family: var(--bs-font-monospace);
+  text-transform: uppercase;
   color: var(--texto-suave);
   font-weight: 500;
+}
+
+.logo-universidad {
+  height: 48px;       
+  width: auto;         
+  margin-right: .5rem;
+}
+
+@media (max-width: 767.98px) {
+  .logo-universidad { height: 36px; }   /* más chico en móvil */
 }
 
 /* ---------- Tarjeta central ---------- */
@@ -189,7 +201,15 @@ body {
   .lateral .offcanvas-header { border-bottom: 1px solid var(--borde); }
 }
 
+#chips {
+  max-height: 110px;          /* unas 4 filas de chips */
+  overflow-y: auto;
+  scrollbar-width: none;      /* Firefox */
+}
 
+#chips::-webkit-scrollbar {
+  display: none;              /* Chrome, Edge, Safari */
+}
 /* ---------- Navegación entre páginas (mosaicos) ---------- */
 
 .navegacion {
