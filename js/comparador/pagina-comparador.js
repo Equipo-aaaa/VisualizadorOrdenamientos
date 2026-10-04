@@ -1,5 +1,5 @@
 import { ALGORITMOS } from '../algoritmos/catalogo.js';
-import { arregloAleatorio, $ } from '../core/utilidades.js';
+import { arregloAleatorio, $, formatoMs } from '../core/utilidades.js';
 import { tamanosDeMuestra, validarRango, ejecutarBenchmark } from './benchmark.js';
 
 /**
@@ -8,19 +8,17 @@ import { tamanosDeMuestra, validarRango, ejecutarBenchmark } from './benchmark.j
  * Flujo:
  *   1. Leer inicio / paso / fin y calcular los tamaños (20, 40, 60, 80, 100).
  *   2. Generar UN arreglo aleatorio por tamaño.
- *   3. Medir cada algoritmo disponible con esos mismos arreglos: tiempo,
+ *   3. Medir cada algoritmo con esos mismos arreglos: tiempo,
  *      comparaciones, intercambios y escrituras.
  *   4. Dibujar una línea por algoritmo con Chart.js (variable global `Chart`)
  *      para la métrica elegida en los botones de arriba.
  *   5. Las casillas ocultan/muestran líneas; Chart.js reescala el eje Y solo.
  */
 
-// Solo se miden los algoritmos que ya están implementados.
-const disponibles = ALGORITMOS.filter((a) => a.fn !== null);
 
 // ids de las líneas que el usuario quiere ver. Se recuerda aunque se vuelva
 // a ejecutar la medición.
-const visibles = new Set(disponibles.filter((a) => !a.ocultoPorDefecto).map((a) => a.id));
+const visibles = new Set(ALGORITMOS.filter((a) => !a.ocultoPorDefecto).map((a) => a.id));
 
 let grafica = null;     // instancia de Chart (se crea con el primer resultado)
 
@@ -52,14 +50,14 @@ const INFO_METRICAS = {
   },
   intercambios: {
     titulo: 'Intercambios vs. tamaño (N)',
-    subtitulo: 'Número de swaps. Insertion y Shell no intercambian: desplazan (ver Escrituras).',
+    subtitulo: 'Número de swaps. Insertion Sort no intercambia: desplaza (ver Escrituras).',
     eje: 'Intercambios',
     tabla: 'Resultados (intercambios)',
     formato: formatoConteo,
   },
   escrituras: {
     titulo: 'Escrituras vs. tamaño (N)',
-    subtitulo: 'Valores escritos sin intercambiar (desplazamientos de Insertion, mezcla de Merge…).',
+    subtitulo: 'Valores escritos sin intercambiar. Solo Insertion Sort los usa (sus desplazamientos).',
     eje: 'Escrituras',
     tabla: 'Resultados (escrituras)',
     formato: formatoConteo,
@@ -109,16 +107,13 @@ function dibujarListaLineas() {
   lista.innerHTML = '';
 
   for (const alg of ALGORITMOS) {
-    const pendiente = alg.fn === null;
     const fila = document.createElement('label');
-    fila.className = 'linea-algoritmo' + (pendiente ? ' deshabilitado' : '');
+    fila.className = 'linea-algoritmo';
     fila.innerHTML = `
-      <input class="form-check-input" type="checkbox"
-             ${visibles.has(alg.id) ? 'checked' : ''} ${pendiente ? 'disabled' : ''}>
+      <input class="form-check-input" type="checkbox" ${visibles.has(alg.id) ? 'checked' : ''}>
       <span class="muestra-color" style="background:${alg.color}"></span>
       <span class="flex-grow-1">${alg.nombre}</span>
-      <span class="etiqueta-complejidad">${pendiente ? 'Pendiente' : alg.tiempo}</span>`;
-
+      <span class="etiqueta-complejidad">${alg.tiempo}</span>`;
     fila.querySelector('input').addEventListener('change', (e) => {
       if (e.target.checked) visibles.add(alg.id);
       else visibles.delete(alg.id);
@@ -149,7 +144,7 @@ function aplicarVisibilidad() {
 function dibujarGrafica(tamanos, datos, metrica) {
   const info = INFO_METRICAS[metrica];
 
-  const datasets = disponibles.map((alg) => ({
+  const datasets = ALGORITMOS.map((alg) => ({
     idAlgoritmo: alg.id,                 // campo propio, para encontrarlo después
     label: alg.nombre,
     data: datos[alg.id],
@@ -161,14 +156,7 @@ function dibujarGrafica(tamanos, datos, metrica) {
     spanGaps: false,                     // si hay null (Stooge con N grande), la línea se corta
   }));
 
-  // Si ya existe, solo se cambian los datos (más rápido que destruirla).
-  if (grafica) {
-    grafica.data.labels = tamanos;
-    grafica.data.datasets = datasets;
-    grafica.options.scales.y.title.text = info.eje;
-    grafica.update();
-    return;
-  }
+  if (grafica) grafica.destroy();
 
   grafica = new Chart($('grafica'), {
     type: 'line',
@@ -182,8 +170,8 @@ function dibujarGrafica(tamanos, datos, metrica) {
         tooltip: {
           callbacks: {
             title: (items) => `N = ${items[0].label}`,
-            // Se lee la métrica al momento, así el tooltip siempre usa el formato correcto
-            label: (item) => ` ${item.dataset.label}: ${INFO_METRICAS[metricaActual()].formato(item.parsed.y)}`,
+            label: (item) => ` ${item.dataset.label}: ${info.formato(item.parsed.y)}`,
+
           },
         },
       },
@@ -224,11 +212,6 @@ function aplicarColoresGrafica() {
 // js/core/tema.js lanza este evento cada vez que se presiona ☀/☾
 document.addEventListener('cambio-tema', aplicarColoresGrafica);
 
-function formatoMs(ms) {
-  if (ms === null || ms === undefined) return '—';
-  return ms < 0.01 ? `${(ms * 1000).toFixed(2)} µs` : `${ms.toFixed(3)} ms`;
-}
-
 function formatoConteo(n) {
   if (n === null || n === undefined) return '—';
   return n.toLocaleString('es-MX');       // 12345 → "12,345"
@@ -242,7 +225,7 @@ function dibujarTabla(tamanos, datos, metrica) {
   $('tablaCabecera').innerHTML =
     `<tr><th>Algoritmo</th><th>Complejidad</th>${tamanos.map((n) => `<th class="text-end">N=${n}</th>`).join('')}</tr>`;
 
-  $('tablaCuerpo').innerHTML = disponibles.map((alg) => `
+  $('tablaCuerpo').innerHTML = ALGORITMOS.map((alg) => `
     <tr>
       <td><span class="muestra-color d-inline-block me-2" style="background:${alg.color};width:10px;height:10px;border-radius:2px"></span>${alg.nombre}</td>
       <td class="text-secondary">${alg.tiempo}</td>
@@ -265,18 +248,13 @@ async function ejecutar() {
   const tamanos = vistaPrevia();
   if (!tamanos) return;
 
-  if (disponibles.length === 0) {
-    $('error').textContent = 'Todavía no hay algoritmos implementados en el catálogo.';
-    return;
-  }
-
   // Bloquear el botón mientras se mide
   $('btnEjecutar').disabled = true;
   $('contenedorProgreso').classList.remove('d-none');
 
   const arreglos = tamanos.map((n) => arregloAleatorio(n, 1000));
 
-  ultimosResultados = await ejecutarBenchmark(disponibles, arreglos, (hechos, total) => {
+  ultimosResultados = await ejecutarBenchmark(ALGORITMOS, arreglos, (hechos, total) => {
     $('barraProgreso').style.width = `${(hechos / total) * 100}%`;
   });
   ultimosTamanos = tamanos;

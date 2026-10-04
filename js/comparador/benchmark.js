@@ -1,56 +1,57 @@
 import { TIPOS } from '../core/eventos.js';
 
-/**
- * BENCHMARK — mide cada algoritmo con arreglos de distinto tamaño.
- *
- * No toca el HTML: recibe datos y devuelve números. Así se puede probar sin
- * navegador y Andrés puede cambiar la gráfica sin tocar la medición.
- *
- * Mide dos tipos de cosas:
- *   - Tiempo (ms): depende de la computadora y del navegador.
- *   - Conteos (comparaciones, intercambios, escrituras): exactos, siempre
- *     dan lo mismo para el mismo arreglo y coinciden con el análisis teórico.
- */
+/*
+  BENCHMARK - mide cada algoritmo con arreglos de distinto tamaño.
 
-/**
- * Lista de tamaños: inicio, inicio+paso, ... sin pasarse de fin.
- * tamanosDeMuestra(20, 20, 100) → [20, 40, 60, 80, 100]
- */
+  Mide dos tipos de cosas:
+    - Tiempo (ms): depende de la computadora y del navegador.
+    - Conteos (comparaciones, intercambios, escrituras): exactos, siempre
+      dan lo mismo para el mismo arreglo y coinciden con el análisis teórico.
+*/
+
+/*
+ Lista de tamaños
+ tamanosDeMuestra(20, 20, 100) → [20, 40, 60, 80, 100]
+*/
 export function tamanosDeMuestra(inicio, paso, fin) {
   const tamanos = [];
   for (let n = inicio; n <= fin; n += paso) tamanos.push(n);
   return tamanos;
 }
 
-/**
- * Revisa los tres campos del generador. Devuelve un texto con el error,
- * o null si todo está bien.
- */
-export function validarRango(inicio, paso, fin, limites = { maxN: 10000, maxPuntos: 50 }) {
-  if (![inicio, paso, fin].every(Number.isInteger)) return 'Los tres campos deben ser números enteros.';
+
+const MAX_N = 10000;
+const MAX_PUNTOS = 50;
+/*
+ Revisa los tres campos del generador. Devuelve un texto con el error, o null si todo está bien
+*/
+export function validarRango(inicio, paso, fin) {
+  if (!Number.isInteger(inicio) || !Number.isInteger(paso) || !Number.isInteger(fin)) {
+    return 'Los tres campos deben ser números enteros.';
+  }
   if (inicio < 1 || paso < 1) return 'Inicio y paso deben ser mayores o iguales a 1.';
   if (fin < inicio) return 'El fin debe ser mayor o igual al inicio.';
-  if (fin > limites.maxN) return `El fin no puede pasar de ${limites.maxN} elementos.`;
+  if (fin > MAX_N) return `El fin no puede pasar de ${MAX_N} elementos.`;
   const puntos = Math.floor((fin - inicio) / paso) + 1;
-  if (puntos > limites.maxPuntos) return `Se generarían ${puntos} arreglos; el máximo es ${limites.maxPuntos}. Aumenta el paso.`;
+  if (puntos > MAX_PUNTOS) return `Se generarían ${puntos} arreglos; el máximo es ${MAX_PUNTOS}. Aumenta el paso.`;
   return null;
 }
 
-/**
- * Tiempo promedio (ms) de UNA ejecución de `fn` sobre `arreglo`.
- *
- * El reloj del navegador (performance.now) solo mide de 0.1 ms en 0.1 ms, y
- * ordenar 20 elementos tarda mucho menos. Por eso se repite el ordenamiento
- * hasta juntar al menos `tiempoMinimo` ms y se divide entre las repeticiones.
- * Se llama SIN lista de eventos (fn(arreglo)) para medir solo el algoritmo.
- */
+/*
+  Tiempo promedio (ms) de UNA ejecución de 'fn' sobre 'arreglo'
+ 
+  El reloj del navegador (performance.now) solo mide de 0.1 ms en 0.1 ms, y
+  ordenar 20 elementos tarda mucho menos. Por eso se repite el ordenamiento
+  hasta juntar al menos 'tiempoMinimo' ms y se divide entre las repeticiones.
+  Se llama SIN lista de eventos (fn(arreglo)) para medir solo el algoritmo.
+*/
 export function medir(fn, arreglo, tiempoMinimo = 5) {
   let repeticiones = 0;
   const inicio = performance.now();
   let transcurrido = 0;
 
   do {
-    fn(arreglo);            // cada algoritmo copia el arreglo: el original no cambia
+    fn(arreglo);  // el algoritmo trabaja sobre una copia: 'arreglo' no cambia        
     repeticiones++;
     transcurrido = performance.now() - inicio;
   } while (transcurrido < tiempoMinimo);
@@ -58,16 +59,13 @@ export function medir(fn, arreglo, tiempoMinimo = 5) {
   return transcurrido / repeticiones;
 }
 
-/**
- * Cuenta las operaciones que hace `fn` al ordenar `arreglo`.
- *
- * Truco: los algoritmos solo llaman `eventos.push(...)`, así que en lugar de
- * un arreglo real se les pasa un objeto con su propio `push` que suma en vez
- * de guardar. Así Stooge con N = 500 (millones de eventos) no llena la memoria.
- *
- * Los `done` no se cuentan: no son operaciones del algoritmo, solo sirven
- * para pintar de verde en la animación.
- */
+/*
+  Cuenta las operaciones que hace 'fn' al ordenar 'arreglo'
+  Los algoritmos llaman a 'eventos.push(...)', que en lugar de crear un arreglo
+  real de eventos, solo incrementa los valores de los contadores para no llenar
+  la memoria
+*/
+
 export function contar(fn, arreglo) {
   const conteo = { comparaciones: 0, intercambios: 0, escrituras: 0 };
   const contador = {
@@ -81,19 +79,19 @@ export function contar(fn, arreglo) {
   return conteo;
 }
 
-/** Cede el control al navegador un instante para que repinte la página. */
+/* Cede el control al navegador un instante para que redibuje la página. */
 const respirar = () => new Promise((resolver) => setTimeout(resolver, 0));
 
-/** Nombres de las métricas que devuelve ejecutarBenchmark. */
+/* Nombres de las métricas que devuelve ejecutarBenchmark. */
 export const METRICAS = ['tiempo', 'comparaciones', 'intercambios', 'escrituras'];
 
-/**
+/*
  * Ejecuta la comparación completa.
  *
- * @param {object[]} algoritmos  Elementos del catálogo (con fn != null).
+ * @param {object[]} algoritmos  Elementos del catálogo
  * @param {number[][]} arreglos  Un arreglo aleatorio por tamaño. TODOS los
- *                               algoritmos ordenan los mismos arreglos.
- * @param {function} alProgreso  (hechos, total) para actualizar la barra.
+ *                               algoritmos ordenan los mismos arreglos
+ * @param {function} alProgreso  (hechos, total) para actualizar la barra
  * @returns {Promise<object>}    Un objeto por métrica:
  *   {
  *     tiempo:        { idAlgoritmo: [ms por tamaño, ...] },
@@ -102,8 +100,8 @@ export const METRICAS = ['tiempo', 'comparaciones', 'intercambios', 'escrituras'
  *     escrituras:    { ... },
  *   }
  *   Un null significa "no se midió" (N demasiado grande para ese algoritmo,
- *   p. ej. Stooge).
- */
+ *   p. ej. Stooge)
+*/
 export async function ejecutarBenchmark(algoritmos, arreglos, alProgreso = () => {}) {
   const resultados = Object.fromEntries(METRICAS.map((m) => [m, {}]));
   const total = algoritmos.length * arreglos.length;

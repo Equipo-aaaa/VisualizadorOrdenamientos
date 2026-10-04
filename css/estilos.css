@@ -1,19 +1,10 @@
 /* =========================================================================
-   Estilos compartidos — VisuAlgoritmos
+   Estilos compartidos - VisuAlgoritmos
    Bootstrap da la estructura (grid, botones, formularios); aquí solo se
    ajusta la paleta del proyecto y lo que Bootstrap no trae (las barras).
+   Las páginas usan siempre el modo oscuro (data-bs-theme="dark" en <html>).
    ========================================================================= */
 
-/* =========================================================================
-   TEMAS
-   Los colores de la paleta (primario, secundario, terciario, neutro) son
-   los mismos en los dos modos. Lo único que cambia son los fondos, textos
-   y algunos tonos de texto "acento" (el cian claro no se lee sobre blanco).
-   El tema se elige con el atributo data-bs-theme de <html>, que también
-   usa Bootstrap; js/core/tema.js lo cambia con el botón ☀/☾.
-   ========================================================================= */
-
-/* ---------- Modo oscuro (por defecto) ---------- */
 :root {
   /* Paleta del proyecto */
   --primario:    #06B6D4;   /* cian    */
@@ -25,13 +16,12 @@
   --fondo:       #111114;
   --superficie:  #1A1A1F;
   --superficie-2:#232329;
-  --superficie-lateral: #232329;   /* tarjetas dentro del panel lateral */
   --borde:       #2E2E35;
   --texto:       #E4E4E7;
   --texto-suave: #A1A1AA;
   --sombra:      rgba(0, 0, 0, .35);
 
-  /* Texto de color: tonos que se leen bien sobre el fondo de este modo */
+  /* Texto de color: tonos claros que se leen bien sobre el fondo oscuro */
   --acento-primario:   #22D3EE;
   --acento-secundario: #818CF8;
   --texto-comparacion: #FBBF24;
@@ -54,37 +44,9 @@
   --bs-font-monospace: 'JetBrains Mono', monospace;
 }
 
-/* ---------- Modo claro ----------
-   :root[...] pesa más que :root solo, por eso gana cuando está activo. */
-:root[data-bs-theme="light"] {
-  /* Fondos y bordes (tonos claros del neutro) */
-  --fondo:       #EFEFF2;
-  --superficie:  #FFFFFF;
-  --superficie-2:#F4F4F5;
-  --superficie-lateral: #FFFFFF;
-  --borde:       #E4E4E7;
-  --texto:       #18181B;
-  --texto-suave: #52525B;
-  --sombra:      rgba(24, 24, 27, .08);
-
-  /* Las mismas familias de color, más oscuras para que contrasten con blanco */
-  --acento-primario:   #0E7490;
-  --acento-secundario: #4F46E5;
-  --texto-comparacion: #B45309;
-  --texto-escritura:   #BE123C;
-  --texto-ordenado:    #047857;
-
-  --barra-inactiva:    #06B6D4;
-}
-
-/* Cambio suave de colores al alternar el tema */
-body, .marco, .lateral, .panel, .algoritmo, .metrica, .linea-algoritmo, #lienzo {
-  transition: background-color .25s ease, border-color .25s ease, color .25s ease;
-}
-
-/* Clases de texto con color que respetan el tema
-   (las text-info / text-warning de Bootstrap no se leen bien en modo claro) */
+/* Clases de texto con los colores de la paleta */
 .texto-acento      { color: var(--acento-primario); }
+.texto-secundario  { color: var(--acento-secundario); }
 .texto-comparacion { color: var(--texto-comparacion); }
 .texto-escritura   { color: var(--texto-escritura); }
 .texto-ordenado    { color: var(--texto-ordenado); }
@@ -189,19 +151,44 @@ body {
 }
 
 /* Tarjeta de controles: ocupa el espacio que sobra y hace scroll interno */
+/* El contenedor ya no hace scroll: reparte la altura entre los paneles */
 .lateral-controles {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Primer panel (generador): altura natural, nunca se encoge */
+.lateral-controles > .panel:first-child {
+  flex: none;
+}
+
+/* Último panel (algoritmos): ocupa lo que sobra */
+.lateral-controles > .panel:last-child {
+  flex: 1 1 auto;
+  min-height: 0;              /* sin esto, flex no deja que se encoja */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Solo la lista hace scroll, con la barra oculta */
+.lista-scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-width: none;      /* Firefox */
+}
+.lista-scroll::-webkit-scrollbar {
+  display: none;              /* Chrome, Edge, Safari */
 }
 
 @media (max-width: 767.98px) {
   /* En móvil la página fluye normal, sin alturas fijas */
   .marco { height: auto; width: calc(100% - 1.5rem); border-radius: 24px; }
   .contenido { height: auto; padding: 1rem; }
-  .lateral { background: var(--fondo); }
   .lateral .offcanvas-header { border-bottom: 1px solid var(--borde); }
 }
+
 
 /* ---------- Navegación entre páginas (mosaicos) ---------- */
 
@@ -247,7 +234,7 @@ body {
 }
 
 .pagina-visualizador { --color-pagina: var(--primario);   --color-pagina-texto: var(--acento-primario); }
-.pagina-comparador   { --color-pagina: var(--secundario); --color-pagina-texto: var(--acento-secundario); }
+.pagina-comparador   { --color-pagina: var(--primario); --color-pagina-texto: var(--acento-primario); }
 
 /* ---------- Paneles (tarjetas) ---------- */
 
@@ -259,7 +246,7 @@ body {
 }
 
 /* Las tarjetas del panel lateral resaltan un poco sobre su fondo */
-.lateral .panel { background: var(--superficie-lateral); }
+.lateral .panel { background: var(--superficie-2); }
 
 .titulo-pagina { font-size: 1.35rem; font-weight: 700; margin: 0; }
 .subtitulo-pagina { color: var(--texto-suave); font-size: .9rem; margin: .15rem 0 0; }
@@ -312,6 +299,67 @@ body {
   --bs-btn-active-color: #fff;
 }
 
+.btn-generar {
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: var(--primario);
+  --bs-btn-color: var(--acento-primario);
+  --bs-btn-hover-bg: var(--primario);
+  --bs-btn-hover-border-color: var(--primario);
+  --bs-btn-hover-color: #04262D;
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--primario);
+  --bs-btn-disabled-color: var(--acento-primario);
+  border-width: 2px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Botones de reproducción */
+.btn-control,
+.btn-metrica {
+  --color-control: var(--primario);   /* color por defecto */
+
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: var(--borde);
+  --bs-btn-color: var(--texto);
+  --bs-btn-hover-bg: var(--color-control);
+  --bs-btn-hover-border-color: var(--color-control);
+  --bs-btn-hover-color: #0B0B0E;
+  --bs-btn-active-bg: var(--color-control);
+  --bs-btn-active-border-color: var(--color-control);
+  --bs-btn-active-color: #0B0B0E;
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--borde);
+  --bs-btn-disabled-color: var(--texto-suave);
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+/* Un color por botón */
+.control-iniciar   { --color-control: var(--terciario); }        /* verde   */
+.control-pausar    { --color-control: var(--barra-comparando); } /* ámbar   */
+.control-paso      { --color-control: var(--primario); }       /* índigo  */
+.control-reiniciar { --color-control: var(--barra-escribiendo); }/* rosa    */
+
+/* Colores de cada métrica*/
+.met-tiempo        { --color-control: var(--terciario); }        /* verde  */
+.met-comparaciones { --color-control: var(--primario); }         /* cian   */
+.met-intercambios  { --color-control: var(--barra-comparando); } /* ámbar  */
+.met-escrituras    { --color-control: var(--barra-escribiendo); }/* rosa   */
+
+/* Botones de velocidad (el label es lo que se ve) */
+.btn-velocidad {
+  --bs-btn-bg: var(--superficie-2);
+  --bs-btn-border-color: var(--borde);
+  --bs-btn-color: var(--texto-suave);
+  --bs-btn-hover-bg: var(--borde);
+  --bs-btn-hover-color: var(--texto);
+  /* Opción seleccionada */
+  --bs-btn-active-bg: var(--primario);
+  --bs-btn-active-border-color: var(--primario);
+  --bs-btn-active-color: #04262D;
+}
+
 /* Slider de Bootstrap en color primario */
 .form-range::-webkit-slider-thumb { background: var(--primario); }
 .form-range::-moz-range-thumb     { background: var(--primario); }
@@ -348,14 +396,12 @@ body {
   transition: transform .15s ease, border-color .15s ease;
 }
 
-.algoritmo:hover:not(:disabled) { border-color: var(--neutro); transform: scale(1.02); }
+.algoritmo:hover { border-color: var(--neutro); transform: scale(1.02); }
 
 .algoritmo.activo {
   border-color: var(--primario);
   box-shadow: 0 0 0 1px var(--primario);
 }
-
-.algoritmo:disabled { opacity: .45; cursor: not-allowed; }
 
 .algoritmo .punto {
   display: inline-block;
@@ -456,8 +502,6 @@ body {
   margin-bottom: .5rem;
   cursor: pointer;
 }
-
-.linea-algoritmo.deshabilitado { opacity: .45; cursor: not-allowed; }
 
 .linea-algoritmo .form-check-input { margin: 0; cursor: inherit; }
 

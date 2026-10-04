@@ -1,6 +1,6 @@
 import { ALGORITMOS, buscarAlgoritmo } from '../algoritmos/catalogo.js';
 import { TIPOS } from '../core/eventos.js';
-import { arregloAleatorio, $ } from '../core/utilidades.js';
+import { arregloAleatorio, $, formatoMs } from '../core/utilidades.js';
 import { medir } from '../comparador/benchmark.js';
 import { Barras } from './barras.js';
 import { Reproductor } from './reproductor.js';
@@ -23,15 +23,14 @@ import { Reproductor } from './reproductor.js';
 // ---------------------------------------------------------------- Estado
 
 let arregloActual = [];
-let algoritmoActual = ALGORITMOS.find((a) => a.fn !== null); // primero disponible
+let algoritmoActual = ALGORITMOS[0];
 let eventosActuales = [];
 
 // Contadores para el panel de métricas. Se actualizan evento por evento.
 const conteo = { comparaciones: 0, intercambios: 0, escrituras: 0, accesos: 0, procesados: 0 };
 
 /**
- * Accesos a memoria que implica cada tipo de evento (criterio de Andrés,
- * antes en js/metricas.js):
+ *  Accesos a memoria que implica cada tipo de evento (criterio de Andrés):
  *   compare   → lee 2 posiciones
  *   swap      → lee 2 y escribe 2
  *   overwrite → lee 1 y escribe 1
@@ -42,24 +41,8 @@ const ACCESOS_POR_EVENTO = {
   [TIPOS.OVERWRITE]: 2,
 };
 
-// ---------------------------------------------------------------- Motor de animación
-
-const barras = new Barras($('lienzo'));
-const reproductor = new Reproductor(barras, {
-  velocidad: Number(document.querySelector('input[name="velocidad"]:checked').value),
-  alAvanzar: actualizarMetricas,
-  alTerminar: () => {
-    ponerEstado('Ordenado', 'text-bg-success');
-    // El Reproductor marca "ya no estoy corriendo" justo DESPUÉS de llamar a
-    // alTerminar; se espera un instante para que los botones lo vean así.
-    setTimeout(actualizarBotones, 0);
-  },
-});
-
 // ---------------------------------------------------------------- Métricas
 
-// Se declara con `function` (no con const) porque el constructor del
-// Reproductor, más arriba, ya llama a actualizarMetricas, que la usa.
 function numero(n) {
   return n.toLocaleString('es-MX');
 }
@@ -74,10 +57,8 @@ function actualizarMetricas(indice, total) {
     conteo.comparaciones = conteo.intercambios = conteo.escrituras = conteo.accesos = conteo.procesados = 0;
   }
 
-  // eventosActuales aún no existe la primera vez (el constructor del
-  // Reproductor llama a alAvanzar antes de cargar algo); por eso el `?.`.
   for (let k = conteo.procesados; k < indice; k++) {
-    const tipo = eventosActuales?.[k]?.type;
+    const tipo = eventosActuales[k].type;
     if (tipo === TIPOS.COMPARE) conteo.comparaciones++;
     else if (tipo === TIPOS.SWAP) conteo.intercambios++;
     else if (tipo === TIPOS.OVERWRITE) conteo.escrituras++;
@@ -92,10 +73,17 @@ function actualizarMetricas(indice, total) {
   $('mProgreso').textContent = `${numero(indice)} / ${numero(total)}`;
 }
 
-/** µs si es muy pequeño, ms si no. */
-function formatoTiempo(ms) {
-  return ms < 1 ? `${(ms * 1000).toFixed(1)} µs` : `${ms.toFixed(3)} ms`;
-}
+// ---------------------------------------------------------------- Motor de animación
+
+const barras = new Barras($('lienzo'));
+const reproductor = new Reproductor(barras, {
+  velocidad: Number(document.querySelector('input[name="velocidad"]:checked').value),
+  alAvanzar: actualizarMetricas,
+  alTerminar: () => {
+    ponerEstado('Ordenado', 'text-bg-success');
+    actualizarBotones();
+  },
+});
 
 // ---------------------------------------------------------------- Interfaz
 
@@ -111,8 +99,10 @@ function actualizarBotones() {
   const empezado = reproductor.indice > 0;
 
   $('btnPlay').disabled = corriendo;
-  $('btnPlayTxt').textContent = reproductor.terminado && empezado ? 'Repetir'
-                              : empezado ? 'Continuar' : 'Iniciar';
+  let texto = 'Iniciar';
+  if (empezado) texto = 'Continuar';
+  if (empezado && reproductor.terminado) texto = 'Repetir';
+  $('btnPlayTxt').textContent = texto;
   $('btnPausa').disabled = !corriendo;
   $('btnPaso').disabled = reproductor.terminado;
 }
@@ -126,16 +116,12 @@ function dibujarListaAlgoritmos() {
     const boton = document.createElement('button');
     boton.type = 'button';
     boton.className = 'algoritmo' + (alg === algoritmoActual ? ' activo' : '');
-    boton.disabled = alg.fn === null;
     boton.innerHTML = `
       <div class="d-flex justify-content-between align-items-center">
         <span><span class="punto" style="background:${alg.color}"></span><strong>${alg.nombre}</strong></span>
-        <span class="etiqueta-complejidad">${alg.fn ? alg.tiempo : 'Pendiente'}</span>
+        <span class="etiqueta-complejidad">${alg.tiempo}</span>
       </div>
-      <div class="d-flex justify-content-between">
-        <small>${alg.descripcion}</small>
-        <small class="mono">Esp. ${alg.espacio}</small>
-      </div>`;
+      <div><small>${alg.descripcion}</small></div>`;
     boton.addEventListener('click', () => elegirAlgoritmo(alg.id));
     lista.appendChild(boton);
   }
@@ -152,7 +138,7 @@ function prepararAnimacion() {
   // Tiempo real del algoritmo con este mismo arreglo, sin eventos ni
   // animación. medir() repite el ordenamiento hasta juntar varios ms,
   // porque una sola ejecución es más rápida que el reloj del navegador.
-  $('mTiempo').textContent = formatoTiempo(medir(algoritmoActual.fn, arregloActual, 2));
+  $('mTiempo').textContent = formatoMs(medir(algoritmoActual.fn, arregloActual, 2));
 
   $('nombreAlgoritmo').textContent =
     `${algoritmoActual.nombre} · ${arregloActual.length} elementos · ${numero(eventosActuales.length)} eventos`;
