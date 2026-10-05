@@ -1,7 +1,7 @@
 import { compare, swap, done } from '../core/eventos.js';
 
 export function exchangeSort(lista, eventos = null) {
-    const arr = [...lista]; 
+    const arr = [...lista];
     const n = arr.length;
 
     for (let i = 0; i < n - 1; i++) {
@@ -10,7 +10,7 @@ export function exchangeSort(lista, eventos = null) {
 
             if (arr[j] < arr[i]) {
                 if (eventos) eventos.push(swap(i, j));
-                
+
                 [arr[i], arr[j]] = [arr[j], arr[i]];
             }
         }
@@ -20,5 +20,5 @@ export function exchangeSort(lista, eventos = null) {
         if (eventos) eventos.push(done(k));
     }
 
-    return arr; 
+    return arr;
 }

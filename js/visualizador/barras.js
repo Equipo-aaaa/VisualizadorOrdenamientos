@@ -1,6 +1,6 @@
-/**
+/*
  * Dibuja el arreglo como barras verticales dentro de un contenedor.
- * Solo sabe pintar; no sabe nada de algoritmos ni de eventos.
+ * Solo se encarga de dibujar las barras, no trata directamente con los ordenamientos ni eventos
  */
 export class Barras {
   constructor(contenedor) {
@@ -9,17 +9,19 @@ export class Barras {
     this.maximo = 1;
   }
 
-  /** Crea una barra por cada valor. Se llama al iniciar o reiniciar. */
+  /* Crea una barra por cada valor. Se llama al iniciar o reiniciar. */
   crear(arr) {
     this.contenedor.innerHTML = '';
     this.maximo = Math.max(...arr, 1);
-    this.elementos = arr.map((valor) => {
+    this.elementos = [];
+
+    for (let i = 0; i < arr.length; i++) {
       const barra = document.createElement('div');
       barra.className = 'barra';
       this.contenedor.appendChild(barra);
-      return barra;
-    });
-    arr.forEach((valor, i) => this.altura(i, valor));
+      this.elementos.push(barra);
+      this.altura(i, arr[i]);
+    }
   }
 
   altura(i, valor) {
@@ -27,7 +29,7 @@ export class Barras {
     this.elementos[i].title = valor;
   }
 
-  /** Quita los resaltados temporales (comparación / escritura). */
+  /* Quita los resaltados temporales (comparación / escritura). */
   limpiar() {
     for (const barra of this.elementos) {
       barra.classList.remove('comparando', 'escribiendo');

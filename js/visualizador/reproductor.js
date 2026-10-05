@@ -1,15 +1,15 @@
 import { TIPOS } from '../core/eventos.js';
 
-/**
- * Reproductor de eventos: toma el arreglo ORIGINAL y la lista de eventos que
- * generó cualquier algoritmo, y los aplica uno por uno para animar.
- * Funciona igual para los 8 algoritmos porque solo depende del estándar.
- */
+/*
+Reproductor de eventos: toma el arreglo ORIGINAL y la lista de eventos que
+generó cualquier algoritmo, y los aplica uno por uno para la animación
+*/
 export class Reproductor {
   /**
    * @param {Barras} barras   Instancia que dibuja.
    * @param {object} opciones { velocidad: ms entre eventos, alTerminar, alAvanzar }
    */
+
   constructor(barras, opciones = {}) {
     this.barras = barras;
     this.velocidad = opciones.velocidad ?? 50;
@@ -48,11 +48,7 @@ export class Reproductor {
     if (this.enReproduccion || this.terminado) return;
     const tick = () => {
       this.paso();
-      if (this.terminado) {
-        this.temporizador = null;
-        return;
-      }
-      this.temporizador = setTimeout(tick, this.velocidad);
+      if (!this.terminado) this.temporizador = setTimeout(tick, this.velocidad);
     };
     this.temporizador = setTimeout(tick, 0);
   }
@@ -99,6 +95,7 @@ export class Reproductor {
     this.alAvanzar(this.indice, this.eventos.length);
     if (this.terminado) {
       this.barras.limpiar();
+      this.pausar();
       this.alTerminar(this.arr);
     }
   }

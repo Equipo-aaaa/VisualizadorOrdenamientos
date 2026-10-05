@@ -1,54 +1,29 @@
-import { compare, swap, done } from '../core/eventos.js';
+import { compare, overwrite, done } from '../core/eventos.js';
 
-function merge(arr, start, mid, end, eventos) {
-    let start2 = mid + 1;
-    if (eventos) eventos.push(compare(mid, start2));
-    if (arr[mid] <= arr[start2]) {
-        return;
-    }
+function mergeSortRec(arr, ini, fin, eventos) {      // rango [ini, fin)
+  if (fin - ini <= 1) return;
+  const mid = ini + Math.floor((fin - ini) / 2);
+  mergeSortRec(arr, ini, mid, eventos);
+  mergeSortRec(arr, mid, fin, eventos);
 
-    while (start <= mid && start2 <= end) {
-        if (eventos) eventos.push(compare(start, start2));
+  const izq = arr.slice(ini, mid);                   // = left_half
+  const der = arr.slice(mid, fin);                   // = right_half
+  let i = 0, j = 0, k = ini;
 
-        if (arr[start] <= arr[start2]) {
-            start++;
-        } else {
-            let index = start2;
-
-            while (index !== start) {
-                if (eventos) eventos.push(swap(index, index - 1));
-                [arr[index], arr[index - 1]] = [arr[index - 1], arr[index]];
-                index--;
-            }
-            start++;
-            mid++;
-            start2++;
-        }
-    }
-}
-
-function mergeSortRec(arr, l, r, eventos) {
-    if (l < r) {
-        let m = l + Math.floor((r - l) / 2);
-
-        mergeSortRec(arr, l, m, eventos);
-        mergeSortRec(arr, m + 1, r, eventos);
-
-        merge(arr, l, m, r, eventos);
-    }
+  while (i < izq.length && j < der.length) {
+    if (eventos) eventos.push(compare(k, mid + j));
+    const valor = izq[i] <= der[j] ? izq[i++] : der[j++];   // <= la hace estable
+    arr[k] = valor;
+    if (eventos) eventos.push(overwrite(k, valor));
+    k++;
+  }
+  while (i < izq.length) { arr[k] = izq[i++]; if (eventos) eventos.push(overwrite(k, arr[k])); k++; }
+  while (j < der.length) { arr[k] = der[j++]; if (eventos) eventos.push(overwrite(k, arr[k])); k++; }
 }
 
 export function mergeSort(lista, eventos = null) {
-    const arr = [...lista];
-    const n = arr.length;
-
-    if (n > 0) {
-        mergeSortRec(arr, 0, n - 1, eventos);
-    }
-
-    for (let k = 0; k < n; k++) {
-        if (eventos) eventos.push(done(k));
-    }
-
-    return arr;
+  const arr = [...lista];
+  mergeSortRec(arr, 0, arr.length, eventos);
+  if (eventos) for (let k = 0; k < arr.length; k++) eventos.push(done(k));
+  return arr;
 }

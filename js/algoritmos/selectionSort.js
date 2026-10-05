@@ -11,15 +11,15 @@ export function selectionSort(lista, eventos = null) {
             if (arr[j] < arr[min_idx]) {
                 min_idx = j;
             }
-        } 
+        }
         if (min_idx !== i) {
             if (eventos) eventos.push(swap(i, min_idx));
             [arr[i], arr[min_idx]] = [arr[min_idx], arr[i]];
         }
-    } 
+    }
     for (let k = 0; k < n; k++) {
         if (eventos) eventos.push(done(k));
     }
 
-    return arr; 
+    return arr;
 }
