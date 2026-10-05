@@ -50,14 +50,14 @@ const INFO_METRICAS = {
   },
   intercambios: {
     titulo: 'Intercambios vs. tamaño (N)',
-    subtitulo: 'Número de swaps. Insertion Sort no intercambia: desplaza (ver Escrituras).',
+    subtitulo: 'Número de swaps.',
     eje: 'Intercambios',
     tabla: 'Resultados (intercambios)',
     formato: formatoConteo,
   },
   escrituras: {
     titulo: 'Escrituras vs. tamaño (N)',
-    subtitulo: 'Valores escritos sin intercambiar. Solo Insertion Sort los usa (sus desplazamientos).',
+    subtitulo: 'Valores escritos sin intercambiar.',
     eje: 'Escrituras',
     tabla: 'Resultados (escrituras)',
     formato: formatoConteo,
