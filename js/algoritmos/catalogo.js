@@ -33,7 +33,7 @@ export const ALGORITMOS = [
   { id: 'insertion', nombre: 'Insertion Sort', descripcion: 'Inserción ordenada',       tiempo: 'O(n²)',      color: '#10B981', maxN: 100, fn: insertionSort },
   { id: 'exchange',  nombre: 'Exchange Sort',  descripcion: 'Compara con cada sucesor', tiempo: 'O(n²)',      color: '#EAB308', maxN: 100, fn: exchangeSort },
   { id: 'gnome',     nombre: 'Gnome Sort',     descripcion: 'Avanza y retrocede',       tiempo: 'O(n²)',      color: '#EC4899', maxN: 100, fn: gnomeSort },
-  { id: 'merge',     nombre: 'Merge Sort',     descripcion: 'Divide y vencerás',        tiempo: 'O(n²)*',     color: '#06B6D4', maxN: 100, fn: mergeSort },
+  { id: 'merge',     nombre: 'Merge Sort',     descripcion: 'Divide y vencerás',        tiempo: 'O(n log n)', color: '#06B6D4', maxN: 100, fn: mergeSort },
   { id: 'quick',     nombre: 'Quick Sort',     descripcion: 'Partición con pivote',     tiempo: 'O(n log n)', color: '#6366F1', maxN: 100, fn: quickSort },
   { id: 'stooge',    nombre: 'Stooge Sort',    descripcion: 'Recursivo 2/3 traslape',   tiempo: 'O(n^2.71)',  color: '#F43F5E', maxN: 30, maxNComparador: 500, ocultoPorDefecto: true, fn: stoogeSort },
 ];
